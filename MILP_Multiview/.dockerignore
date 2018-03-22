@@ -1,0 +1,7 @@
+*
+!FindCPLEX.cmake
+!src
+!inc
+!CMakeLists.txt
+!mount_bind_opt_ibm_here/ILOG/CPLEX_Studio1271/cplex
+!mount_bind_opt_ibm_here/ILOG/CPLEX_Studio1271/concert
