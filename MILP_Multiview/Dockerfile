@@ -16,4 +16,6 @@ RUN apt-get update &&\
     apt-get install -y libboost-program-options-dev libboost-serialization-dev libboost-system-dev libboost-filesystem-dev libboost-iostreams-dev libgomp1
 COPY --from=builder /home/optimal/build/optimal /bin
 WORKDIR /home/optimal
+RUN useradd -r -u 1000 -g users xmar
+USER xmar
 ENTRYPOINT ["optimal"]
