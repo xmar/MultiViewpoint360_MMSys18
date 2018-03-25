@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# To build the base image yourself: docker build -f Dockerfile.base  -t xmar/recontruct_tiled_mpv360_mmsys18:base .
 if (docker images | grep "xmar/recontruct_tiled_mpv360_mmsys18") > /dev/null ; then
     echo "'xmar/recontruct_tiled_mpv360_mmsys18' already pulled"
 else

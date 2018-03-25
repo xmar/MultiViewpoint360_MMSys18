@@ -1,0 +1,13 @@
+FROM xmar/ffmpeg_mp4box:mmsys18
+
+RUN buildDeps="python3-pip" &&\
+    apt-get -yqq update && \
+    apt-get install -yq --no-install-recommends python3 ${buildDeps}
+ADD requirements.txt .
+RUN pip3 install --upgrade pip&&\
+    pip3 install -r requirements.txt &&\
+    rm -f requirements.txt &&\
+    apt-get purge -y ${buildDeps} && \
+    apt-get autoremove -y && \
+    apt-get clean -y
+WORKDIR /home/reconstruct
