@@ -97,6 +97,8 @@ if __name__ == '__main__':
     scenarioList = ['Opt', 'Vert', 'Hori']
     #bandwidthList = [3, 5, 7, 10, 15, 20]
     bandwidthList = [3, 7, 10]
+    #viewportResolution = {'viewportWidth':1920, 'viewportHeight':1080}
+    viewportResolution = {'viewportWidth':1024, 'viewportHeight':576}
 
     for nbTile in nbTileList:
         for scenario in scenarioList:
@@ -233,7 +235,7 @@ if __name__ == '__main__':
                             s = ''
                             for line in i:
                                 s += line
-                            o.write(s.format(originInputVid= pathToOriginal, clientInputVid= pathToMP4File, nbFrame= nbChunk*fps, processingStep=processingStep, NavigationTracePath= os.path.abspath('Navigations/Navigation_user_{}.txt'.format(u))))
+                            o.write(s.format(originInputVid= pathToOriginal, clientInputVid= pathToMP4File, nbFrame= nbChunk*fps, processingStep=processingStep, NavigationTracePath= os.path.abspath('Navigations/Navigation_user_{}.txt'.format(u)), **viewportResolution))
 
                         #Generate original video
                         vidInfo = GetVideoInfo('original/cam1_4k_30fps.mp4')
@@ -271,7 +273,7 @@ if __name__ == '__main__':
                                     l3 = l3[oneFrameSize:]
                                     if pTrans is None:
                                         #pTrans = sub.Popen([trans, '-c', 'Config.ini'])
-                                        pTrans = dockerClient.containers.run('xmar/trans360', 'trans -c /tmp/trans360/Config.ini', auto_remove=True, volumes_from='recontruct_tiled_mpv360_mmsys18', detach=True)
+                                        pTrans = dockerClient.containers.run('xmar/trans360:mmsys18', 'trans -c /tmp/trans360/Config.ini', auto_remove=True, volumes_from='recontruct_tiled_mpv360_mmsys18', detach=True)
                                         sub.Popen(['printContainerLogs.py', pTrans.id])
                                     #for line in pTrans.logs(stream=True):
                                     #    print(line)

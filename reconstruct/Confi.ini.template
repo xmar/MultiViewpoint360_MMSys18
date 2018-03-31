@@ -1,8 +1,8 @@
 [Global]
 ;output fps
 fps=30
-;Names of the Section for the layout flow: [[Equirectangular, CubeMap, FlatFixed], [Equirectangular, FlatFixed]] means: from Equirectangular to CubeMap to FlatFixed AND from Equirectangular to FlatFixed
-layoutFlow= [["{originInputVid}", "Equirectangular", "FlatFixed"], ["{clientInputVid}", "CubeMap", "FlatFixed"]]
+;Names of the Section for the layout flow: [[Equirectangular, CubeMap, Viewport], [Equirectangular, Viewport]] means: from Equirectangular to CubeMap to Viewport AND from Equirectangular to Viewport
+layoutFlow= [["{originInputVid}", "Equirectangular", "Viewport"], ["{clientInputVid}", "CubeMap", "Viewport"]]
 ;if displayFinalPict is set, it will display the final picture of each flow for each input picture of the original video
 displayFinalPict=false
 ;if not empty, a video will be recorded for each flow using the path + the file name given here (the file name will be unique per flow).
@@ -71,10 +71,10 @@ bitrateBack=1
 ;bitrate is used only if useTile=false. A ratio r means a bitrate of r*videoOutputBitRate
 bitrate=1
 
-[FlatFixed]
-;type of the layout: flatFixed means FoV extraction
-type=flatFixed
-;relativeResolution cannot be true for flatFixed layout
+[Viewport]
+;type of the layout: viewport means FoV extraction
+type=viewport
+;relativeResolution cannot be true for viewport layout
 relativeResolution=false
 ;indicates if we want to use a static position set by the yaw, pitch and roll parameter or play a traces located at positionTrace
 dynamicPositions=true
@@ -84,10 +84,8 @@ positionTrace={NavigationTracePath}
 ; rotation= {{"type":"euler", "yaw":0.0, "pitch":0.0, "roll":0.0}}
 rotation= {{"type":"angleAxis", "angle":90, "x":0.0, "y":0, "z":1}}
 ;width and height in pixels of the output image
-;width=720
-width=1920
-;height=320
-height=1080
+width={viewportWidth}
+height={viewportHeight}
 ;Horizontal angle of the display device (in degree)
 horizontalAngleOfVision=110
 ;Vertical angle of the display device (in degree)
