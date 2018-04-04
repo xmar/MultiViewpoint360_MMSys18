@@ -7,9 +7,10 @@ import subprocess as sub
 import numpy as np
 import docker
 import shutil
+from tqdm import tqdm
 
 def GetVideoInfo(pathToVideo):
-    p = sub.Popen([ffprobe, '-v', 'error', '-of', 'flat=s=_', '-select_streams', 'v:0', '-show_entries', 'stream=height,width,avg_frame_rate',pathToVideo], stdout=sub.PIPE)
+    p = sub.Popen([ffprobe, '-v', 'error', '-of', 'flat=s=_', '-select_streams', 'v:0', '-show_entries', 'stream=height,width,avg_frame_rate',pathToVideo], stdout=sub.PIPE, stderr=sub.DEVNULL)
     r = dict()
     l = ['width', 'height','fps']
     i = 0
@@ -100,9 +101,9 @@ if __name__ == '__main__':
     #viewportResolution = {'viewportWidth':1920, 'viewportHeight':1080}
     viewportResolution = {'viewportWidth':1024, 'viewportHeight':576}
 
-    for nbTile in nbTileList:
-        for scenario in scenarioList:
-            for bandwidth in bandwidthList:
+    for nbTile in tqdm(nbTileList):
+        for scenario in tqdm(scenarioList):
+            for bandwidth in tqdm(bandwidthList):
                 viewpoints = None
                 selectedTile = None
                 nbUser = None
@@ -112,7 +113,7 @@ if __name__ == '__main__':
                 # Parse the result file
                 pathResult = resultsPathId.format(nbTile=nbTile, ScenarioType=scenario, Bandwidth=bandwidth)
                 if not os.path.exists(pathResult):
-                    print('Error:',pathResult,'doesn\'t exist')
+                    tqdm.write('Error:',pathResult,'doesn\'t exist')
                     exit(1)
                 with open(pathResult, 'r') as i:
                     first = True
@@ -145,8 +146,8 @@ if __name__ == '__main__':
                 nbChunk = 32
                 #nbUser = 1
                 #nbBandwidth = 1
-                for u in range(nbUser):
-                    for b in range(nbBandwidth):
+                for u in tqdm(range(nbUser)):
+                    for b in tqdm(range(nbBandwidth)):
                         # Generate a temporary output video
                         dashInitPaths = 'dash_repr/cam{{vId}}_{nbTileNameOut}_{{qualityName}}mbps/baseballcam{{vId}}_4k_yuv_{tileName}{{qualityName}}mbps{track}init.mp4'.format(nbTileNameOut= 'notiles' if nbTile == 1 else ('3x2' if nbTile == 6 else '6x4'), tileName='' if nbTile == 1 else ('3x2_' if nbTile == 6 else '6x4_'), track='_dash' if nbTile == 1 else '_set1_')
                         dashSegPaths = 'dash_repr/cam{{vId}}_{nbTileNameOut}_{{qualityName}}mbps/baseballcam{{vId}}_4k_yuv_{tileName}{{qualityName}}mbps_dash{track}{{chunkId}}.m4s'.format(nbTileNameOut= 'notiles' if nbTile == 1 else ('3x2' if nbTile == 6 else '6x4'), tileName='' if nbTile == 1 else ('3x2_' if nbTile == 6 else '6x4_'), track='' if nbTile == 1 else '_track{trackId}_')
@@ -158,21 +159,21 @@ if __name__ == '__main__':
                                 for camId in range(3):
                                     initPath = dashInitPaths.format(vId=camId+1, trackId=tileId+2, chunkId=chunkId+1, qualityLevel=qualityId, qualityName=qualityNameList[qualityId])
                                     if not os.path.exists(initPath):
-                                        print(initPath, 'doesn\'t exist')
+                                        tqdm.write(initPath + ' doesn\'t exist')
                                         exit(1)
                                     for chunkId in range(nbChunk):
                                         segPath = dashSegPaths.format(vId=camId+1, trackId=tileId+2, chunkId=chunkId+1, qualityLevel=qualityId, qualityName=qualityNameList[qualityId])
                                         if not os.path.exists(segPath):
-                                            print(segPath, 'doesn\'t exist')
+                                            tqdm.write(segPath + ' doesn\'t exist')
                                             exit(1)
 
                         outDirPath = 'outputs/{}_{}_tile_user_{}_bandidth_{}_{}Mbps'.format(scenario, nbTile, u, b, bandwidth)
                         if os.path.exists('{}/quality.txt'.format(outDirPath)):
-                            print('{}/quality.txt'.format(outDirPath), 'exists, computation skipped')
+                            tqdm.write('{}/quality.txt'.format(outDirPath) + ' exists, computation skipped')
                             ParseResults(nbTileList, scenarioList, bandwidthList, nbUser, nbBandwidth, nbChunk)
                             continue
                         #Generate client video
-                        print('Prepare the client video')
+                        tqdm.write('Prepare the client video')
                         if not os.path.exists('/tmp/trans360'):
                             os.makedirs('/tmp/trans360')
                         pathToMP4File = '/tmp/trans360/myVideo_{}_{}.mp4'.format(u, b)
@@ -191,7 +192,7 @@ if __name__ == '__main__':
                                             with open( dashSegPaths.format(vId=1, trackId=1, chunkId=chunkId+1, qualityLevel=0, qualityName=qualityNameList[0]), 'rb') as i:
                                                 o.write(i.read())
                                         if qualityId < 0:
-                                            #print('skiped:', zero.format(trackId=tileId+2, chunkId=chunkId+1))
+                                            #tqdm.write('skiped:', zero.format(trackId=tileId+2, chunkId=chunkId+1))
                                             #with open(zero.format(trackId=tileId+2, chunkId=chunkId+1), 'rb') as i:
                                             #    o.write(i.read())
                                             with open( dashSegPaths.format(vId=(vId+1)%3+1, trackId=tileId+2, chunkId=chunkId+1, qualityLevel=0, qualityName=qualityNameList[qualityId]), 'rb') as i:
@@ -200,36 +201,36 @@ if __name__ == '__main__':
                                             with open( dashSegPaths.format(vId=vId+1, trackId=tileId+2, chunkId=chunkId+1, qualityLevel=qualityId, qualityName=qualityNameList[qualityId]), 'rb') as i:
                                                 o.write(i.read())
                             #Merge tracks together
-                            sub.check_call([MP4Box, '-raw', '1', pathToMP4File], cwd='/tmp')
+                            sub.check_call([MP4Box, '-raw', '1', pathToMP4File], cwd='/tmp', stdout=sub.DEVNULL, stderr=sub.DEVNULL)
                             #Put the extracted stream into a MP4 container
-                            sub.check_call([MP4Box, '-add', pathToMP4File[:-4]+'_track1.hvc', '-new', pathToMP4File], cwd='/tmp')
+                            sub.check_call([MP4Box, '-add', pathToMP4File[:-4]+'_track1.hvc', '-new', pathToMP4File], cwd='/tmp', stdout=sub.DEVNULL, stderr=sub.DEVNULL)
                             os.remove(pathToMP4File[:-4]+'_track1.hvc')
                         else:
                             #p = sub.Popen(['ffmpeg', '-i', '-', '-c:v', 'libx265', '-x265-params', 'lossless=1', '-y', pathToMP4File], stdin=sub.PIPE)
-                            p = sub.Popen(['ffmpeg', '-i', '-', '-c:v', 'copy', '-y', pathToMP4File], stdin=sub.PIPE)
+                            p = sub.Popen(['ffmpeg', '-i', '-', '-c:v', 'copy', '-y', pathToMP4File], stdin=sub.PIPE, stderr=sub.DEVNULL)
                             for chunkId in range(nbChunk):
                                 tmp = '/tmp/vid{}.mp4'.format(chunkId)
                                 with open(tmp, 'wb') as o:
                                     qualityId = selectedTile[u*nbBandwidth+b][chunkId][0]
                                     vId = viewpoints[u*nbBandwidth+b][chunkId]
                                     if qualityId < 0:
-                                        print('Do not support currently having no segment download for a chunk in the no tile scenario')
+                                        tqdm.write('Do not support currently having no segment download for a chunk in the no tile scenario')
                                         exit(1)
                                     with open(dashInitPaths.format(vId=vId+1, qualityLevel=qualityId, qualityName=qualityNameList[qualityId]), 'rb') as i:
                                         o.write(i.read())
                                     with open( dashSegPaths.format(vId=vId+1, trackId=tileId+2, chunkId=chunkId+1, qualityLevel=qualityId, qualityName=qualityNameList[qualityId]), 'rb') as i:
                                         o.write(i.read())
-                                sub.check_call([MP4Box, '-raw', '1', tmp], cwd='/tmp')
-                                sub.check_call([MP4Box, '-add', tmp[:-4]+'_track1.hvc', '-new', tmp], cwd='/tmp')
+                                sub.check_call([MP4Box, '-raw', '1', tmp], cwd='/tmp', stdout=sub.DEVNULL, stderr=sub.DEVNULL)
+                                sub.check_call([MP4Box, '-add', tmp[:-4]+'_track1.hvc', '-new', tmp], cwd='/tmp', stdout=sub.DEVNULL, stderr=sub.DEVNULL)
                                 os.remove(tmp[:-4]+'_track1.hvc')
-                                sub.check_call([ffmpeg, '-i', tmp, '-c:v', 'copy', '-bsf:v', 'hevc_mp4toannexb', '-f', 'mpegts', '-y', '-'], stdout=p.stdin)
+                                sub.check_call([ffmpeg, '-i', tmp, '-c:v', 'copy', '-bsf:v', 'hevc_mp4toannexb', '-f', 'mpegts', '-y', '-'], stdout=p.stdin, stderr=sub.DEVNULL)
                                 os.remove(tmp)
                             p.stdin.close()
                             p.wait()
                         fps = 30
                         #processingStep = 6
                         processingStep = 15
-                        print('Prepare configuration file')
+                        tqdm.write('Prepare configuration file')
                         pathToOriginal = '/tmp/trans360/original_4096x2048.y4m'
                         with open('/tmp/trans360/Config.ini', 'w') as o, open('Confi.ini.template', 'r') as i:
                             s = ''
@@ -241,25 +242,25 @@ if __name__ == '__main__':
                         vidInfo = GetVideoInfo('original/cam1_4k_30fps.mp4')
                         res = '{width}x{height}'.format(**vidInfo)
                         if not os.path.exists('oneFrame.yuv'):
-                            sub.check_call([ffmpeg, '-i', 'original/cam1_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-vframes', '1', 'oneFrame.yuv'])
+                            sub.check_call([ffmpeg, '-i', 'original/cam1_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-vframes', '1', 'oneFrame.yuv'], stdout=sub.DEVNULL, stderr=sub.DEVNULL)
                         oneFrameSize = os.path.getsize('oneFrame.yuv')
-                        print('Prepare the orinal video and start trans')
+                        tqdm.write('Prepare the orinal video and start trans')
                         try:
 
                             if not os.path.exists(pathToOriginal):
-                                sub.check_call(['mkfifo', pathToOriginal])
+                                sub.check_call(['mkfifo', pathToOriginal], stdout=sub.DEVNULL, stderr=sub.DEVNULL)
                                 #pass
                             pTrans = None
-                            pYuv = sub.Popen([ffmpeg, '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', '4096x2048', '-pix_fmt', 'yuv420p', '-r', '30', '-i', '-', '-pix_fmt', 'yuv420p', '-f', 'yuv4mpegpipe', '-vframes', '{}'.format(nbChunk*30), '-y', pathToOriginal], stdin=sub.PIPE, bufsize=(fps+2)*oneFrameSize)
-                            p1 = sub.Popen([ffmpeg, '-i', 'original/cam1_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-'], stdout=sub.PIPE, bufsize=oneFrameSize)
-                            p2 = sub.Popen([ffmpeg, '-i', 'original/cam2_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-'], stdout=sub.PIPE, bufsize=oneFrameSize)
-                            p3 = sub.Popen([ffmpeg, '-i', 'original/cam3_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-'], stdout=sub.PIPE, bufsize=oneFrameSize)
+                            pYuv = sub.Popen([ffmpeg, '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', '4096x2048', '-pix_fmt', 'yuv420p', '-r', '30', '-i', '-', '-pix_fmt', 'yuv420p', '-f', 'yuv4mpegpipe', '-vframes', '{}'.format(nbChunk*30), '-y', pathToOriginal], stdin=sub.PIPE, bufsize=(fps+2)*oneFrameSize, stdout=sub.DEVNULL, stderr=sub.DEVNULL)
+                            p1 = sub.Popen([ffmpeg, '-i', 'original/cam1_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-'], stdout=sub.PIPE, bufsize=oneFrameSize, stderr=sub.DEVNULL)
+                            p2 = sub.Popen([ffmpeg, '-i', 'original/cam2_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-'], stdout=sub.PIPE, bufsize=oneFrameSize, stderr=sub.DEVNULL)
+                            p3 = sub.Popen([ffmpeg, '-i', 'original/cam3_4k_30fps.mp4', '-c:v', 'rawvideo', '-f', 'rawvideo', '-s', res, '-pix_fmt', 'yuv420p', '-y', '-f', 'rawvideo', '-'], stdout=sub.PIPE, bufsize=oneFrameSize, stderr=sub.DEVNULL)
                             l1 = b''
                             l2 = b''
                             l3 = b''
 
                             poller = None
-                            for chunkId in range(nbChunk):
+                            for chunkId in tqdm(range(nbChunk)):
                                 vId = viewpoints[u*nbBandwidth+b][chunkId]
                                 for f in range(fps):
                                     while len(l1) < oneFrameSize:
@@ -274,14 +275,7 @@ if __name__ == '__main__':
                                     if pTrans is None:
                                         #pTrans = sub.Popen([trans, '-c', 'Config.ini'])
                                         pTrans = dockerClient.containers.run('xmar/trans360:mmsys18', 'trans -c /tmp/trans360/Config.ini', auto_remove=True, volumes_from='recontruct_tiled_mpv360_mmsys18', detach=True)
-                                        sub.Popen(['printContainerLogs.py', pTrans.id])
-                                    #for line in pTrans.logs(stream=True):
-                                    #    print(line)
-                                    #    poller = select.poll()
-                                    #    poller.register(pTrans.logs(stream=True))
-                                    #if poller is not None:
-                                    #    while poller.poll(1):
-                                    #        print(pTrans.logs(stream=True).readline())
+                                        #sub.Popen(['printContainerLogs.py', pTrans.id])
 
                         finally:
                             p1.stdout.close()
@@ -298,8 +292,10 @@ if __name__ == '__main__':
 
                         if not os.path.exists(outDirPath):
                             os.makedirs(outDirPath)
-                        shutil.move('/tmp/trans360/output1_1FlatFixed.mkv', '{}/original.mkv'.format(outDirPath))
-                        shutil.move('/tmp/trans360/output1_2FlatFixed.mkv', '{}/client.mkv'.format(outDirPath))
-                        shutil.move('/tmp/trans360/output1_2FlatFixed.txt', '{}/quality.txt'.format(outDirPath))
+                        shutil.move('/tmp/trans360/output1_1Viewport.mkv', '{}/original.mkv'.format(outDirPath))
+                        shutil.move('/tmp/trans360/output1_2Viewport.mkv', '{}/client.mkv'.format(outDirPath))
+                        shutil.move('/tmp/trans360/output1_2Viewport.txt', '{}/quality.txt'.format(outDirPath))
                         ParseResults(nbTileList, scenarioList, bandwidthList, nbUser, nbBandwidth, nbChunk)
+    if os.path.exists('oneFrame.yuv'):
+        os.remove('oneFrame.yuv')
 
