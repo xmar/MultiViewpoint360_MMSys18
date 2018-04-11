@@ -24,3 +24,4 @@ Each folder contains a README file that describe its content.
 | MILP_Multiview | Implementation of the MILP using C++ and IBM Cplex |
 | ffmpeg_mp4box_container | Contains a dockerfile to generate an image with ffmpeg and MP4Box |
 | reconstruct | Script using the output from the MILP to reconstruct the client received bit-streaming, to extract the viewport, and compute an objective metric |
+| rawNavigationTrace | Contains the navigation trace of four users watching the multi-viewpoint video |
