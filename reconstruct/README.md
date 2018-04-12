@@ -1,5 +1,5 @@
 ---
-title:	"Multi-viewpoint 360: MMSys'18"
+title:	"Dynamic Adaptive Streaming for Multi-Viewpoint Omnidirectional Videos: In proceeding of ACM Multimedia System (MMSys'18)"
 author: Xavier Corbillon, Francesca De Simone, Gwendal Simon, and Pascal Frossard
 date:	April 19, 2018
 ---
