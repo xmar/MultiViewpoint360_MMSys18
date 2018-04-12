@@ -25,3 +25,9 @@ Each folder contains a README file that describe its content.
 | ffmpeg_mp4box_container | Contains a dockerfile to generate an image with ffmpeg and MP4Box |
 | reconstruct | Script using the output from the MILP to reconstruct the client received bit-streaming, to extract the viewport, and compute an objective metric |
 | rawNavigationTrace | Contains the navigation trace of four users watching the multi-viewpoint video |
+
+## Install docker
+
+If you do not have docker installed on your computer, you can install it by following the instruction on the official website https://docs.docker.com/install/ or on the support of your OS.
+
+Do not forget to start the docker server before running the different scripts.
