@@ -73,7 +73,7 @@ bitrate=1
 
 [Viewport]
 ;type of the layout: viewport means FoV extraction
-type=viewport
+type=flatFixed
 ;relativeResolution cannot be true for viewport layout
 relativeResolution=false
 ;indicates if we want to use a static position set by the yaw, pitch and roll parameter or play a traces located at positionTrace
